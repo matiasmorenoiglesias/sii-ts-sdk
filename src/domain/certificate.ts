@@ -4,15 +4,15 @@ import { ForgeCertificateParser } from "../adapters/forge-certificate-parser.js"
 
 export { CertificateError } from "./errors.js";
 
-export class Certificado {
+export class Certificate {
   readonly privateKeyPem: string;
   readonly certificatePem: string;
-  readonly rutEmisor: string;
+  readonly issuerRut: string;
 
-  private constructor(privateKeyPem: string, certificatePem: string, rutEmisor: string) {
+  private constructor(privateKeyPem: string, certificatePem: string, issuerRut: string) {
     this.privateKeyPem = privateKeyPem;
     this.certificatePem = certificatePem;
-    this.rutEmisor = rutEmisor;
+    this.issuerRut = issuerRut;
   }
 
   /**
@@ -20,15 +20,15 @@ export class Certificado {
    * adapter; a different one (or a fake) can be injected to test the
    * domain logic without depending on the concrete library.
    */
-  static async desdeP12(
+  static async fromP12(
     buffer: Buffer,
     password: string,
     parser: CertificateParser = new ForgeCertificateParser(),
-  ): Promise<Certificado> {
+  ): Promise<Certificate> {
     const parsed = parser.parse(buffer, password);
-    const rutEmisor = extractRutFromSubject(parsed.subject);
+    const issuerRut = extractRutFromSubject(parsed.subject);
 
-    return new Certificado(parsed.privateKeyPem, parsed.certificatePem, rutEmisor);
+    return new Certificate(parsed.privateKeyPem, parsed.certificatePem, issuerRut);
   }
 }
 

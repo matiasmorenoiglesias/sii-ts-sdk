@@ -65,27 +65,27 @@ Estas son las partes donde se pierde el tiempo. Trátalas con cuidado:
 Esta es la interfaz pública. Manténla así salvo que haya una razón fuerte:
 
 ```ts
-const emisor = new Emisor({
+const issuer = new Issuer({
   rut: "76123456-7",
-  razonSocial: "Mi Empresa SpA",
-  giro: "Servicios",
-  certificado: await Certificado.desdeP12(buffer, password),
-  ambiente: "certificacion",
+  legalName: "Mi Empresa SpA",
+  businessActivity: "Servicios",
+  certificate: await Certificate.fromP12(buffer, password),
+  environment: "certification",
 });
 
-const caf = await CAF.desdeXML(cafBuffer);
+const caf = await CAF.fromXML(cafBuffer);
 
-const boleta = await emisor.crearBoleta({
+const boleta = await issuer.createBoleta({
   caf,
   folio: 1,
-  receptor: { rut: "66666666-6" },
-  detalle: [
-    { nombre: "Sesión kinesiología", cantidad: 1, precio: 25000 },
+  recipient: { rut: "66666666-6" },
+  items: [
+    { name: "Sesión kinesiología", quantity: 1, price: 25000 },
   ],
 });
 
-const token = await emisor.autenticar();
-const resultado = await emisor.enviar(boleta, token);
+const token = await issuer.authenticate();
+const result = await issuer.send(boleta, token);
 ```
 
 Criterio: se tiene que entender leyéndolo, sin abrir la documentación del SII.
@@ -94,13 +94,18 @@ Criterio: se tiene que entender leyéndolo, sin abrir la documentación del SII.
 
 - TypeScript estricto. `strict: true`, sin `any`.
 - Dependencias mínimas. Cada una se justifica. Preferir lo que ya trae Node.
-- Nombres de dominio en español, pero **solo** los que están fijados en la
-  API objetivo de este documento (`Certificado`, `Emisor`, `CAF`, `folio`,
-  `receptor`, `rut`, `detalle`, `caf`, etc.). Todo lo demás va en inglés:
-  arquitectura interna (carpetas `domain/`, `ports/`, `adapters/`),
-  interfaces y clases de soporte, nombres de funciones internas, mensajes
-  de código (no de usuario), variables. Ante la duda, si el nombre no
-  aparece en la API objetivo, es inglés.
+- Todo el código en inglés (clases, archivos, carpetas, funciones,
+  variables, comentarios técnicos), **excepto** los términos oficiales
+  del SII que no tienen equivalente correcto en inglés: `RUT`, `CAF`,
+  `DTE`, `Boleta`, `Factura`. Esos se mantienen tal cual, porque son
+  nombres legales de documentos/campos específicos — traducirlos
+  ("Boleta" → "Receipt") puede confundir cuál documento SII se está
+  representando. Ejemplo: `Certificate`, `Issuer`, `CAF` (se mantiene),
+  `recipient`, `legalName`, `businessActivity`, `createBoleta` (verbo en
+  inglés, sustantivo oficial se mantiene).
+- Los mensajes de error dirigidos al desarrollador (texto de las
+  excepciones) pueden ir en español — son para el consumidor final de la
+  librería, no identificadores de código.
 - Patrón ports and adapters para separar dominio de librerías externas:
   el dominio (`src/domain`) define puertos (`src/domain/ports`) que
   consume; las implementaciones concretas con dependencias externas

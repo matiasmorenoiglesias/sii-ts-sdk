@@ -1,2 +1,2 @@
-export { Certificado, CertificateError } from "./domain/certificado.js";
-export { aISO88591, desdeISO88591 } from "./encoding.js";
+export { Certificate, CertificateError } from "./domain/certificate.js";
+export { toISO88591, fromISO88591 } from "./encoding.js";

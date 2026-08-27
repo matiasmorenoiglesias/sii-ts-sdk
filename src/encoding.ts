@@ -5,10 +5,10 @@
  * directamente.
  */
 
-export function aISO88591(texto: string): Buffer {
-  return Buffer.from(texto, "latin1");
+export function toISO88591(text: string): Buffer {
+  return Buffer.from(text, "latin1");
 }
 
-export function desdeISO88591(datos: Buffer): string {
-  return datos.toString("latin1");
+export function fromISO88591(data: Buffer): string {
+  return data.toString("latin1");
 }
