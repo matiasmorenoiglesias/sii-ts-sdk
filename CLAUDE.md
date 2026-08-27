@@ -94,8 +94,18 @@ Criterio: se tiene que entender leyéndolo, sin abrir la documentación del SII.
 
 - TypeScript estricto. `strict: true`, sin `any`.
 - Dependencias mínimas. Cada una se justifica. Preferir lo que ya trae Node.
-- Nombres de dominio en español (`folio`, `emisor`, `receptor`, `caf`),
-  el resto en inglés.
+- Nombres de dominio en español, pero **solo** los que están fijados en la
+  API objetivo de este documento (`Certificado`, `Emisor`, `CAF`, `folio`,
+  `receptor`, `rut`, `detalle`, `caf`, etc.). Todo lo demás va en inglés:
+  arquitectura interna (carpetas `domain/`, `ports/`, `adapters/`),
+  interfaces y clases de soporte, nombres de funciones internas, mensajes
+  de código (no de usuario), variables. Ante la duda, si el nombre no
+  aparece en la API objetivo, es inglés.
+- Patrón ports and adapters para separar dominio de librerías externas:
+  el dominio (`src/domain`) define puertos (`src/domain/ports`) que
+  consume; las implementaciones concretas con dependencias externas
+  (node-forge, cliente SOAP, etc.) viven en `src/adapters` y son
+  reemplazables/testeables con fakes sin tocar el dominio.
 - Errores tipados y descriptivos. Si el SII rechaza, el mensaje debe decir
   qué campo y por qué, no devolver el XML crudo.
 - Sin console.log en la librería.
