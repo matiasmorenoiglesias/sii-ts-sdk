@@ -1,0 +1,11 @@
+node_modules/
+dist/
+*.log
+
+# Certificados y CAF reales — nunca commitear
+*.p12
+*.pfx
+*.pem
+!fixtures/**/*.p12
+!fixtures/**/*.pem
+caf-real*.xml

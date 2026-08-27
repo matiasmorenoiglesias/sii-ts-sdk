@@ -1,0 +1,35 @@
+{
+  "name": "boleta-sii-ts",
+  "version": "0.0.1",
+  "description": "Librería TypeScript para emitir boletas electrónicas al SII de Chile (ambiente de certificación)",
+  "type": "module",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "node --import tsx --test test/*.test.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "node-forge": "^1.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "@types/node-forge": "^1.3.11",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
