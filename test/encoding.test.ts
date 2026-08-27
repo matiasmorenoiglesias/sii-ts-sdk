@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { aISO88591, desdeISO88591 } from "../src/encoding.ts";
+import { aISO88591, desdeISO88591 } from "../src/encoding.js";
 
 test("aISO88591 codifica tildes y ñ correctamente", () => {
   const texto = "Sesión kinesiología, peñíasco eléctrico";

@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
-import { Certificado, ErrorCertificado } from "../src/certificado.ts";
+import { Certificado, ErrorCertificado } from "../src/dominio/certificado.js";
 
 const rutaFixture = fileURLToPath(new URL("../fixtures/certificado-prueba.p12", import.meta.url));
 
