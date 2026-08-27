@@ -1,5 +1,5 @@
 {
-  "name": "boleta-sii-ts",
+  "name": "sii-ts-sdk",
   "version": "0.0.1",
   "description": "Librería TypeScript para emitir boletas electrónicas al SII de Chile (ambiente de certificación)",
   "type": "module",
