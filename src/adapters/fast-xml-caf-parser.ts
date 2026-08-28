@@ -22,11 +22,12 @@ interface CAFDocument {
 /** Adapter for the CAFParser port using fast-xml-parser. */
 export class FastXmlCAFParser implements CAFParser {
   parse(buffer: Buffer): ParsedCAF {
+    const text = buffer.toString("latin1");
     const parser = new XMLParser();
 
     let doc: CAFDocument;
     try {
-      doc = parser.parse(buffer.toString("latin1")) as CAFDocument;
+      doc = parser.parse(text) as CAFDocument;
     } catch (error) {
       throw new CAFError("El archivo CAF no es un XML válido", { cause: error });
     }
@@ -54,8 +55,17 @@ export class FastXmlCAFParser implements CAFParser {
       publicKeyExponent: toStringField(da.RSAPK?.E, "RSAPK/E"),
       keyId: toStringField(da.IDK, "IDK"),
       privateKeyPem: privateKeyPem.trim(),
+      rawXml: extractRawCafBlock(text),
     };
   }
+}
+
+function extractRawCafBlock(text: string): string {
+  const match = text.match(/<CAF\b[^>]*>[\s\S]*?<\/CAF>/);
+  if (!match) {
+    throw new CAFError("No se pudo extraer el bloque <CAF>...</CAF> textual del XML");
+  }
+  return match[0];
 }
 
 function toStringField(value: unknown, field: string): string {

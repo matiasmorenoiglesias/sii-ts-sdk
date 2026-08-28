@@ -35,6 +35,14 @@ export interface ParsedCAF {
   keyId: string;
   /** Llave privada que firma el TED, en formato PEM tal cual la entrega el SII. */
   privateKeyPem: string;
+  /**
+   * El bloque <CAF version="...">...</CAF> tal cual apareció en el XML
+   * original (byte a byte, sin reconstruir). El TED debe embeber este
+   * bloque exactamente así — el SII firmó su copia sobre esos bytes
+   * exactos, así que reconstruirlo desde los campos parseados podría
+   * introducir diferencias de espacios que invaliden la firma.
+   */
+  rawXml: string;
 }
 
 export interface CAFParser {

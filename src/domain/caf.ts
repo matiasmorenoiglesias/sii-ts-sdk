@@ -1,5 +1,5 @@
 import { CAFError } from "./errors.js";
-import type { CAFParser } from "./ports/caf-parser.js";
+import type { CAFParser, ParsedCAF } from "./ports/caf-parser.js";
 import { FastXmlCAFParser } from "../adapters/fast-xml-caf-parser.js";
 
 export { CAFError } from "./errors.js";
@@ -17,27 +17,20 @@ export class CAF {
   readonly publicKeyExponent: string;
   readonly keyId: string;
   readonly privateKeyPem: string;
+  /** Bloque <CAF>...</CAF> textual, tal cual lo entregó el SII — se embebe sin modificar dentro del TED. */
+  readonly rawXml: string;
 
-  private constructor(
-    issuerRut: string,
-    legalName: string,
-    documentType: string,
-    folioRange: { from: number; to: number },
-    authorizedAt: string,
-    publicKeyModulus: string,
-    publicKeyExponent: string,
-    keyId: string,
-    privateKeyPem: string,
-  ) {
-    this.issuerRut = issuerRut;
-    this.legalName = legalName;
-    this.documentType = documentType;
-    this.folioRange = folioRange;
-    this.authorizedAt = authorizedAt;
-    this.publicKeyModulus = publicKeyModulus;
-    this.publicKeyExponent = publicKeyExponent;
-    this.keyId = keyId;
-    this.privateKeyPem = privateKeyPem;
+  private constructor(parsed: ParsedCAF) {
+    this.issuerRut = parsed.issuerRut;
+    this.legalName = parsed.legalName;
+    this.documentType = parsed.documentType;
+    this.folioRange = parsed.folioRange;
+    this.authorizedAt = parsed.authorizedAt;
+    this.publicKeyModulus = parsed.publicKeyModulus;
+    this.publicKeyExponent = parsed.publicKeyExponent;
+    this.keyId = parsed.keyId;
+    this.privateKeyPem = parsed.privateKeyPem;
+    this.rawXml = parsed.rawXml;
   }
 
   /**
@@ -59,17 +52,7 @@ export class CAF {
       );
     }
 
-    return new CAF(
-      parsed.issuerRut,
-      parsed.legalName,
-      parsed.documentType,
-      parsed.folioRange,
-      parsed.authorizedAt,
-      parsed.publicKeyModulus,
-      parsed.publicKeyExponent,
-      parsed.keyId,
-      parsed.privateKeyPem,
-    );
+    return new CAF(parsed);
   }
 
   /** Indica si el folio dado está dentro del rango autorizado por este CAF. */

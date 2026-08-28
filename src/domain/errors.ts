@@ -11,3 +11,10 @@ export class CAFError extends Error {
     this.name = "CAFError";
   }
 }
+
+export class TEDError extends Error {
+  constructor(message: string, { cause }: { cause?: unknown } = {}) {
+    super(message, { cause });
+    this.name = "TEDError";
+  }
+}

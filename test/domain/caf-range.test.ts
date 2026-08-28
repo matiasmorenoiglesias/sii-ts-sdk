@@ -17,6 +17,7 @@ class FakeCAFParser implements CAFParser {
       publicKeyExponent: "AQAB",
       keyId: "100",
       privateKeyPem: "-----BEGIN RSA PRIVATE KEY-----\nfake\n-----END RSA PRIVATE KEY-----",
+      rawXml: '<CAF version="1.0"><DA>fake</DA><FRMA>fake</FRMA></CAF>',
       ...this.overrides,
     };
   }
