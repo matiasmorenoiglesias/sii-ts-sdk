@@ -18,7 +18,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "test": "node --import tsx --test",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "try:certificate": "node --env-file=.env --import tsx examples/try-certificate.ts"
   },
   "dependencies": {
     "fast-xml-parser": "^5.11.1",

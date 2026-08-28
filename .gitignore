@@ -9,3 +9,9 @@ dist/
 !fixtures/**/*.p12
 !fixtures/**/*.pem
 caf-real*.xml
+
+# Carpeta para credenciales/archivos reales de prueba local, nunca se sube
+.local/
+
+# Variables de entorno locales (contraseñas, etc.), nunca se sube
+.env
