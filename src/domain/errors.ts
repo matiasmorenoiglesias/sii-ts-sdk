@@ -4,3 +4,10 @@ export class CertificateError extends Error {
     this.name = "CertificateError";
   }
 }
+
+export class CAFError extends Error {
+  constructor(message: string, { cause }: { cause?: unknown } = {}) {
+    super(message, { cause });
+    this.name = "CAFError";
+  }
+}
