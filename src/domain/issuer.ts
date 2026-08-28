@@ -8,10 +8,12 @@ import type { SeedSigner } from "./ports/seed-signer.js";
 import type { SiiAuthClient } from "./ports/sii-auth-client.js";
 import type { DocumentSigner } from "./ports/document-signer.js";
 import type { EnvioBoletaUploader, UploadResult } from "./ports/envio-boleta-uploader.js";
+import type { DteStatusResult, SiiStatusClient, UploadStatusResult } from "./ports/sii-status-client.js";
 import { XmlCryptoSeedSigner } from "../adapters/xml-crypto-seed-signer.js";
 import { FetchSiiAuthClient } from "../adapters/fetch-sii-auth-client.js";
 import { XmlCryptoDocumentSigner } from "../adapters/xml-crypto-document-signer.js";
 import { FetchEnvioBoletaUploader } from "../adapters/fetch-envio-boleta-uploader.js";
+import { FetchSiiStatusClient } from "../adapters/fetch-sii-status-client.js";
 
 export { IssuerError } from "./errors.js";
 
@@ -166,6 +168,44 @@ export class Issuer {
     }
 
     return result;
+  }
+
+  /**
+   * Consulta el estado de un envío ya subido, por su trackId (el que
+   * devuelve `send()`). Requiere conexión de red.
+   *
+   * @param statusClient SiiStatusClient port. Defaults to the fetch adapter.
+   */
+  async checkUploadStatus(
+    trackId: string,
+    token: string,
+    statusClient: SiiStatusClient = new FetchSiiStatusClient(),
+  ): Promise<UploadStatusResult> {
+    return statusClient.getUploadStatus(this.rut, trackId, token);
+  }
+
+  /**
+   * Consulta el estado de un DTE individual ya emitido y enviado.
+   * Requiere conexión de red.
+   *
+   * @param statusClient SiiStatusClient port. Defaults to the fetch adapter.
+   */
+  async checkDteStatus(
+    dte: DTE,
+    token: string,
+    statusClient: SiiStatusClient = new FetchSiiStatusClient(),
+  ): Promise<DteStatusResult> {
+    return statusClient.getDteStatus(
+      {
+        companyRut: this.rut,
+        recipientRut: dte.recipientRut,
+        documentType: dte.documentType,
+        folio: dte.folio,
+        issueDate: dte.issueDate,
+        totalAmount: dte.totalAmount,
+      },
+      token,
+    );
   }
 }
 

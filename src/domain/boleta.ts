@@ -99,13 +99,28 @@ export class Boleta {
   readonly documentType: string;
   readonly ted: TED;
   readonly totalAmount: number;
+  readonly folio: number;
+  readonly issueDate: string;
+  readonly recipientRut: string;
 
-  private constructor(xml: string, id: string, documentType: string, ted: TED, totalAmount: number) {
+  private constructor(
+    xml: string,
+    id: string,
+    documentType: string,
+    ted: TED,
+    totalAmount: number,
+    folio: number,
+    issueDate: string,
+    recipientRut: string,
+  ) {
     this.xml = xml;
     this.id = id;
     this.documentType = documentType;
     this.ted = ted;
     this.totalAmount = totalAmount;
+    this.folio = folio;
+    this.issueDate = issueDate;
+    this.recipientRut = recipientRut;
   }
 
   static create(caf: CAF, input: BoletaInput): Boleta {
@@ -160,7 +175,7 @@ export class Boleta {
       `<TmstFirma>${input.timestamp}</TmstFirma>` +
       "</Documento>";
 
-    return new Boleta(xml, id, caf.documentType, ted, totalAmount);
+    return new Boleta(xml, id, caf.documentType, ted, totalAmount, input.folio, input.issueDate, input.recipient.rut);
   }
 }
 

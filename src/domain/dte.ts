@@ -16,10 +16,25 @@ export class DTE {
   /** El bloque <DTE version="1.0">...</DTE> completo, firmado. */
   readonly xml: string;
   readonly documentType: string;
+  readonly folio: number;
+  readonly issueDate: string;
+  readonly recipientRut: string;
+  readonly totalAmount: number;
 
-  private constructor(xml: string, documentType: string) {
+  private constructor(
+    xml: string,
+    documentType: string,
+    folio: number,
+    issueDate: string,
+    recipientRut: string,
+    totalAmount: number,
+  ) {
     this.xml = xml;
     this.documentType = documentType;
+    this.folio = folio;
+    this.issueDate = issueDate;
+    this.recipientRut = recipientRut;
+    this.totalAmount = totalAmount;
   }
 
   /**
@@ -40,6 +55,6 @@ export class DTE {
     }
 
     const xml = `<DTE version="1.0">${boleta.xml}${signatureXml}</DTE>`;
-    return new DTE(xml, boleta.documentType);
+    return new DTE(xml, boleta.documentType, boleta.folio, boleta.issueDate, boleta.recipientRut, boleta.totalAmount);
   }
 }

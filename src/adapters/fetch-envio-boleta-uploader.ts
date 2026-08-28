@@ -1,6 +1,7 @@
 import { XMLParser } from "fast-xml-parser";
 import type { EnvioBoletaUploader, UploadResult } from "../domain/ports/envio-boleta-uploader.js";
 import { EnvioBoletaUploaderError } from "../domain/errors.js";
+import { splitRut } from "./rut-format.js";
 
 /**
  * Adapter for the EnvioBoletaUploader port usando fetch nativo con
@@ -15,8 +16,8 @@ const UPLOAD_URL = "https://maullin.sii.cl/cgi_dte/UPL/DTEUpload";
 
 export class FetchEnvioBoletaUploader implements EnvioBoletaUploader {
   async upload(xml: string, senderRut: string, companyRut: string, token: string): Promise<UploadResult> {
-    const sender = splitRut(senderRut);
-    const company = splitRut(companyRut);
+    const sender = splitRut(senderRut, EnvioBoletaUploaderError);
+    const company = splitRut(companyRut, EnvioBoletaUploaderError);
 
     const form = new FormData();
     form.append("rutSender", sender.number);
@@ -42,14 +43,6 @@ export class FetchEnvioBoletaUploader implements EnvioBoletaUploader {
 
     return parseUploadResponse(await response.text());
   }
-}
-
-function splitRut(rut: string): { number: string; dv: string } {
-  const match = rut.match(/^(\d{1,8})-([\dkK])$/);
-  if (!match?.[1] || !match[2]) {
-    throw new EnvioBoletaUploaderError(`RUT con formato inválido: "${rut}" (se espera XXXXXXXX-X)`);
-  }
-  return { number: match[1], dv: match[2] };
 }
 
 interface RecepcionDteDoc {

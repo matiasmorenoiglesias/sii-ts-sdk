@@ -60,3 +60,10 @@ export class EnvioBoletaUploaderError extends Error {
     this.name = "EnvioBoletaUploaderError";
   }
 }
+
+export class SiiStatusClientError extends Error {
+  constructor(message: string, { cause }: { cause?: unknown } = {}) {
+    super(message, { cause });
+    this.name = "SiiStatusClientError";
+  }
+}
