@@ -15,7 +15,7 @@ la documentación del SII. No es un ERP, no es un servicio: es una librería.
 > — funcional a nivel de código, en proceso de certificación real con el
 > SII.** El SDK arma, firma, autentica y envía boletas de punta a punta. El
 > set de pruebas de certificación ya fue enviado al SII y está en revisión
-> (10-15 días hábiles) — ver [Roadmap](#roadmap) más abajo. Solo opera
+> (10-15 días hábiles) — ver [`ROADMAP.md`](./ROADMAP.md). Solo opera
 > contra el ambiente de **certificación**, nunca producción.
 
 ## Alcance
@@ -79,26 +79,13 @@ Piezas individuales (`Certificate`, `CAF`, `TED`, `Boleta`, `DTE`,
 `EnvioBoleta`) también se exportan por si necesitas más control — ver el
 código fuente en `src/domain/` para su API completa.
 
-## Roadmap
+## Documentación adicional
 
-**Hito 1 — cumplido a nivel de código, en revisión del SII.** El SDK arma,
-firma, autentica y envía una boleta tipo 39 de punta a punta. El set de
-pruebas de certificación (5 casos) ya fue enviado al SII para su
-aprobación — trámite en curso, fuera del SDK.
-
-- [x] Certificado digital (`.p12`)
-- [x] CAF (archivo de folios)
-- [x] TED (timbre electrónico)
-- [x] Armado del XML del `Documento`/`Boleta`
-- [x] Firma XML del DTE (XMLDSig + C14N)
-- [x] Sobre `EnvioBOLETA` firmado
-- [x] Autenticación SOAP (semilla → token)
-- [x] Envío (`DTEUpload`)
-- [x] Consulta de estado (`QueryEstUp`/`QueryEstDte`)
-
-**Hito 2 — en curso.**
-
-- [ ] Resumen de Ventas Diarias (envío diario obligatorio)
+- [`ROADMAP.md`](./ROADMAP.md) — qué está hecho y qué falta, por hito
+- [`ONBOARDING.md`](./ONBOARDING.md) — cómo conseguir certificado digital
+  y CAF reales para probar contra el ambiente de certificación del SII
+- [`CONTRIBUTING.md`](./CONTRIBUTING.md) — cómo contribuir al proyecto
+- [`CLAUDE.md`](./CLAUDE.md) — alcance, convenciones y reglas del proyecto
 
 ## Desarrollo
 
@@ -115,9 +102,10 @@ arquitectura (ports and adapters) y reglas de nomenclatura.
 
 ### Probar contra un certificado/CAF real
 
-`examples/` trae scripts que usan datos reales (nunca se commitean — van en
-`.local/` y `.env`, ambos ignorados por git). Copia `.env.example` a `.env`
-y completa tus datos:
+Ver [`ONBOARDING.md`](./ONBOARDING.md) para cómo conseguir un certificado
+digital y un CAF reales. `examples/` trae scripts que los usan (nunca se
+commitean — van en `.local/` y `.env`, ambos ignorados por git). Copia
+`.env.example` a `.env` y completa tus datos:
 
 ```bash
 npm run try:certificate   # lee un .p12/.pfx real y muestra el RUT extraído
