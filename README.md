@@ -3,18 +3,18 @@
 ![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
 ![Node](https://img.shields.io/badge/node-%3E%3D20-339933?logo=node.js&logoColor=white)
-![Status](https://img.shields.io/badge/status-en%20desarrollo-yellow)
+![Status](https://img.shields.io/badge/status-en%20certificaci%C3%B3n-yellow)
 
 Librería TypeScript para emitir boletas electrónicas al SII de Chile.
 
 El objetivo es que un dev chileno pueda emitir una boleta sin tener que leer
 la documentación del SII. No es un ERP, no es un servicio: es una librería.
 
-> ⚠️ **Estado actual: en desarrollo temprano, no funcional todavía.**
-> Solo está implementada la lectura del certificado digital. Falta CAF,
-> armado del DTE, TED, firma y envío. No usar en producción — de hecho,
-> este proyecto ni siquiera tocará el ambiente de producción del SII (ver
-> alcance más abajo).
+> ⚠️ **Estado actual: funcional a nivel de código, en proceso de
+> certificación real con el SII.** El SDK arma, firma, autentica y envía
+> boletas de punta a punta. Falta la confirmación del SII contra el set de
+> pruebas de certificación — ver [Roadmap](#roadmap) más abajo. Solo opera
+> contra el ambiente de **certificación**, nunca producción.
 
 ## Alcance
 
@@ -24,9 +24,11 @@ la documentación del SII. No es un ERP, no es un servicio: es una librería.
 - Lectura de certificado digital `.p12` y CAF
 - Armado del XML del DTE, generación del TED, firma
 - Autenticación (semilla → token), envío y consulta de estado
+- Resumen de Ventas Diarias (en curso)
 
 **Fuera de alcance:** facturas, notas de crédito/débito, guías de despacho,
-ambiente de producción, generación de PDF, persistencia, CLI, servidor HTTP.
+ambiente de producción, generación de PDF, persistencia de folios, envío de
+correos, CLI, servidor HTTP.
 
 El detalle completo de alcance, convenciones y reglas de este proyecto está
 en [`CLAUDE.md`](./CLAUDE.md).
@@ -37,62 +39,64 @@ en [`CLAUDE.md`](./CLAUDE.md).
 npm install sii-ts-sdk
 ```
 
-## Uso actual
-
-Por ahora el SDK solo permite leer un certificado digital y extraer la
-llave privada, el certificado y el RUT del emisor:
+## Uso
 
 ```ts
-import { Certificate } from "sii-ts-sdk";
+import { Certificate, CAF, Issuer } from "sii-ts-sdk";
 import { readFile } from "node:fs/promises";
 
-const buffer = await readFile("mi-certificado.p12");
-const certificate = await Certificate.fromP12(buffer, "mi-password");
-
-certificate.privateKeyPem;  // llave privada del emisor
-certificate.certificatePem; // certificado X.509
-certificate.issuerRut;      // RUT extraído del certificado
-```
-
-## API objetivo
-
-Esta es la interfaz pública hacia la que se está construyendo el SDK:
-
-```ts
 const issuer = new Issuer({
   rut: "76123456-7",
   legalName: "Mi Empresa SpA",
   businessActivity: "Servicios",
-  certificate: await Certificate.fromP12(buffer, password),
+  certificate: await Certificate.fromP12(await readFile("certificado.p12"), "password"),
   environment: "certification",
+  resolutionDate: "2025-01-01", // fecha de la resolución que te autorizó, necesaria para enviar
 });
 
-const caf = await CAF.fromXML(cafBuffer);
+const caf = await CAF.fromXML(await readFile("caf.xml"));
 
-const boleta = await issuer.createBoleta({
+// Arma y firma la boleta (100% local, sin red)
+const dte = await issuer.createBoleta({
   caf,
   folio: 1,
   recipient: { rut: "66666666-6" },
   items: [{ name: "Sesión kinesiología", quantity: 1, price: 25000 }],
 });
 
+// Autentica contra el SII (semilla → token) y envía
 const token = await issuer.authenticate();
-const result = await issuer.send(boleta, token);
+const result = await issuer.send(dte, token);
+
+// Consulta de estado, más tarde
+const uploadStatus = await issuer.checkUploadStatus(result.trackId!, token);
+const dteStatus = await issuer.checkDteStatus(dte, token);
 ```
 
-## Roadmap — Hito 1
+Piezas individuales (`Certificate`, `CAF`, `TED`, `Boleta`, `DTE`,
+`EnvioBoleta`) también se exportan por si necesitas más control — ver el
+código fuente en `src/domain/` para su API completa.
 
-El único objetivo por ahora: **una boleta tipo 39 aceptada por el ambiente
-de certificación del SII.**
+## Roadmap
 
-- [x] Lectura de certificado digital `.p12`
-- [x] Utilidad de encoding ISO-8859-1
-- [ ] Parseo del CAF (archivo de folios)
-- [ ] Armado del XML del DTE
-- [ ] Generación del TED
-- [ ] Firma del DTE
-- [ ] Autenticación SOAP (semilla → token)
-- [ ] Envío y consulta de estado
+**Hito 1 — cumplido a nivel de código.** El SDK arma, firma, autentica y
+envía una boleta tipo 39 de punta a punta. Falta la confirmación real del
+SII contra el set de pruebas de certificación (trámite en curso, fuera del
+SDK).
+
+- [x] Certificado digital (`.p12`)
+- [x] CAF (archivo de folios)
+- [x] TED (timbre electrónico)
+- [x] Armado del XML del `Documento`/`Boleta`
+- [x] Firma XML del DTE (XMLDSig + C14N)
+- [x] Sobre `EnvioBOLETA` firmado
+- [x] Autenticación SOAP (semilla → token)
+- [x] Envío (`DTEUpload`)
+- [x] Consulta de estado (`QueryEstUp`/`QueryEstDte`)
+
+**Hito 2 — en curso.**
+
+- [ ] Resumen de Ventas Diarias (envío diario obligatorio)
 
 ## Desarrollo
 
@@ -107,8 +111,18 @@ Los certificados y CAF de `fixtures/` son de prueba, generados localmente —
 nunca reales. Ver [`CLAUDE.md`](./CLAUDE.md) para convenciones de código,
 arquitectura (ports and adapters) y reglas de nomenclatura.
 
+### Probar contra un certificado/CAF real
+
+`examples/` trae scripts que usan datos reales (nunca se commitean — van en
+`.local/` y `.env`, ambos ignorados por git). Copia `.env.example` a `.env`
+y completa tus datos:
+
+```bash
+npm run try:certificate   # lee un .p12/.pfx real y muestra el RUT extraído
+npm run try:send          # crea, autentica y envía una boleta real (¡toca la red!)
+npm run try:set-prueba    # genera los 5 XML del set de pruebas de certificación
+```
+
 ## Licencia
 
 [MIT](./LICENSE)
-
-
