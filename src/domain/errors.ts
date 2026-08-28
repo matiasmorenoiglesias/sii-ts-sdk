@@ -18,3 +18,10 @@ export class TEDError extends Error {
     this.name = "TEDError";
   }
 }
+
+export class BoletaError extends Error {
+  constructor(message: string, { cause }: { cause?: unknown } = {}) {
+    super(message, { cause });
+    this.name = "BoletaError";
+  }
+}

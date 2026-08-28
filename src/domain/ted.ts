@@ -2,6 +2,7 @@ import { createSign } from "node:crypto";
 import type { CAF } from "./caf.js";
 import { TEDError } from "./errors.js";
 import { toISO88591 } from "../encoding.js";
+import { escapeXml } from "./xml-escape.js";
 
 export { TEDError } from "./errors.js";
 
@@ -110,13 +111,4 @@ function sign(data: string, privateKeyPem: string): string {
   signer.update(toISO88591(data));
   signer.end();
   return signer.sign(privateKeyPem, "base64");
-}
-
-function escapeXml(text: string): string {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&apos;");
 }
