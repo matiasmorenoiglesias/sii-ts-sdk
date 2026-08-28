@@ -12,13 +12,22 @@ aprobación — trámite en curso, fuera del SDK.
 - [x] Armado del XML del `Documento`/`Boleta`
 - [x] Firma XML del DTE (XMLDSig + C14N)
 - [x] Sobre `EnvioBOLETA` firmado
-- [x] Autenticación SOAP (semilla → token)
-- [x] Envío (`DTEUpload`)
-- [x] Consulta de estado (`QueryEstUp`/`QueryEstDte`)
+- [x] Autenticación SOAP (semilla → token) — **verificado contra el SII real**, dos bugs encontrados y corregidos en el proceso (ver commit `bc7cf38`)
+- [x] Envío (`DTEUpload`) — código completo, **sin verificar contra el SII real todavía**
+- [x] Consulta de estado (`QueryEstUp`/`QueryEstDte`) — código completo, **sin verificar contra el SII real todavía**
 
 ## Hito 2 — en curso
 
 - [ ] Resumen de Ventas Diarias (envío diario obligatorio, incluso en $0)
+
+## Difusión
+
+No anunciar públicamente (LinkedIn, X, etc.) hasta que `send()` y la
+consulta de estado estén verificados contra el SII real, o hasta que
+llegue la confirmación de certificación. `authenticate()` parecía sólido
+por los tests con fakes y aun así tenía dos bugs reales — probable que
+`send()`, más complejo, tenga sorpresas parecidas. Mejor que el primer
+contacto público con el proyecto sea "funciona", no un bug del primer día.
 
 Ver [`CLAUDE.md`](./CLAUDE.md) para el detalle del alcance de cada hito y
 la regla de "no avanzar sin conversarlo" al cerrar uno.
