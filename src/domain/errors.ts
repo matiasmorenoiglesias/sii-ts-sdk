@@ -46,3 +46,10 @@ export class IssuerError extends Error {
     this.name = "IssuerError";
   }
 }
+
+export class SiiAuthClientError extends Error {
+  constructor(message: string, { cause }: { cause?: unknown } = {}) {
+    super(message, { cause });
+    this.name = "SiiAuthClientError";
+  }
+}

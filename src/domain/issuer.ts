@@ -3,6 +3,10 @@ import type { CAF } from "./caf.js";
 import { Boleta, type BoletaItem, type BoletaRecipient } from "./boleta.js";
 import { DTE } from "./dte.js";
 import { IssuerError } from "./errors.js";
+import type { SeedSigner } from "./ports/seed-signer.js";
+import type { SiiAuthClient } from "./ports/sii-auth-client.js";
+import { XmlCryptoSeedSigner } from "../adapters/xml-crypto-seed-signer.js";
+import { FetchSiiAuthClient } from "../adapters/fetch-sii-auth-client.js";
 
 export { IssuerError } from "./errors.js";
 
@@ -75,6 +79,33 @@ export class Issuer {
     });
 
     return DTE.sign(boleta, this.certificate);
+  }
+
+  /**
+   * Autentica contra el SII (semilla → token) usando el certificado del
+   * emisor. Requiere conexión de red al ambiente de certificación.
+   *
+   * @param seedSigner SeedSigner port. Defaults to the xml-crypto adapter.
+   * @param authClient SiiAuthClient port. Defaults to the fetch adapter.
+   */
+  async authenticate(
+    seedSigner: SeedSigner = new XmlCryptoSeedSigner(),
+    authClient: SiiAuthClient = new FetchSiiAuthClient(),
+  ): Promise<string> {
+    const seedResult = await authClient.getSeed();
+    if (seedResult.status !== "00" || !seedResult.seed) {
+      throw new IssuerError(`El SII no entregó una semilla válida (estado ${seedResult.status})`);
+    }
+
+    const signedSeedXml = seedSigner.sign(seedResult.seed, this.certificate.privateKeyPem, this.certificate.certificatePem);
+
+    const tokenResult = await authClient.getToken(signedSeedXml);
+    if (tokenResult.status !== "00" || !tokenResult.token) {
+      const detail = tokenResult.glosa ? `: ${tokenResult.glosa}` : "";
+      throw new IssuerError(`El SII no entregó un token válido (estado ${tokenResult.status}${detail})`);
+    }
+
+    return tokenResult.token;
   }
 }
 
