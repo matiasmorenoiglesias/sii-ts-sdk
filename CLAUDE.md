@@ -18,7 +18,9 @@ No es un ERP. No es un servicio. Es una librería.
 - Leer CAF (archivo de folios) desde XML
 - Armar XML del DTE, generar TED, firmar
 - Autenticación: semilla → token
-- Envío y consulta de estado
+- Envío y consulta de estado (`QueryEstUp`/`QueryEstDte`)
+- Resumen de Ventas Diarias (ex "Reporte de Consumo de Folios") —
+  envío diario obligatorio para emisores habilitados, incluso en $0
 
 ### Fuera — no implementar aunque parezca fácil
 
@@ -124,12 +126,27 @@ Criterio: se tiene que entender leyéndolo, sin abrir la documentación del SII.
 - El test de integración contra certificación va aparte y no corre en CI
   por defecto.
 
-## Hito 1 — lo único que importa ahora
+## Hito 1 — cumplido a nivel de código
 
 Una boleta tipo 39 aceptada por el ambiente de certificación del SII.
+El SDK ya arma, firma, autentica y envía de punta a punta
+(`Issuer.createBoleta` → `authenticate` → `send`). Falta la
+confirmación real del SII contra el set de pruebas de certificación
+(en curso, fuera del SDK — trámite del usuario).
 
-Cuando eso pase, paramos y decidimos qué sigue. No avanzar más allá sin
-conversarlo.
+## Hito 2 — consulta de estado y Resumen de Ventas Diarias
+
+Con el Hito 1 resuelto a nivel de código, seguimos con:
+
+1. **Consulta de estado** (`QueryEstUp.jws`/`QueryEstDte.jws`) — saber
+   si el SII aceptó de verdad un envío, no solo que lo recibió.
+2. **Resumen de Ventas Diarias** — envío diario obligatorio (`docs/`
+   trae el formato). Requiere resolver el desglose Neto/IVA por
+   documento, que hasta ahora evitamos calcular en `Boleta` por no
+   tener la fórmula de redondeo confirmada — hay que confirmarla acá.
+
+Cuando esto se resuelva, paramos y decidimos qué sigue. No avanzar más
+allá sin conversarlo.
 
 ## Cómo trabajar
 
