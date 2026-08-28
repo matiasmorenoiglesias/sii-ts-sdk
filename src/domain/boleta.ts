@@ -18,11 +18,12 @@ export { BoletaError } from "./errors.js";
  * Ventas y Servicio"), el caso general, hasta que se confirme si hace
  * falta exponerlo al llamador.
  *
- * NOTA — <Totales> solo incluye <MntTotal> (el único campo obligatorio
- * del schema). No se calculan <MntNeto>/<IVA> todavía: el desglose neto
- * + IVA depende de reglas de redondeo que no están confirmadas contra
- * documentación oficial, así que se prefiere omitirlos (son opcionales)
- * antes que adivinar la fórmula exacta.
+ * NOTA — <Totales> incluye <MntExe> (suma de ítems marcados como
+ * exentos) cuando corresponde, y siempre <MntTotal>. No se calcula
+ * <MntNeto>/<IVA> para los ítems afectos todavía: ese desglose depende
+ * de reglas de redondeo que no están confirmadas contra documentación
+ * oficial, así que se prefiere omitirlos (son opcionales) antes que
+ * adivinar la fórmula exacta.
  */
 
 const DEFAULT_IND_SERVICIO = "3";
@@ -50,6 +51,17 @@ export interface BoletaItem {
   name: string;
   quantity?: number;
   price?: number;
+  /** Unidad de medida (ej. "Kg"), máximo 4 caracteres. */
+  unitOfMeasure?: string;
+  /** Marca el ítem como exento/no afecto (IndExe=1). Permite mezclar ítems afectos y exentos en una misma boleta. */
+  exempt?: boolean;
+}
+
+export interface BoletaReference {
+  /** Código interno del tipo de referencia. Ej: "SET" en el set de pruebas de certificación. */
+  code?: string;
+  /** Razón explícita de la referencia. Ej: "CASO-1". */
+  reason?: string;
 }
 
 export interface BoletaInput {
@@ -59,6 +71,8 @@ export interface BoletaInput {
   issuer: BoletaIssuer;
   recipient: BoletaRecipient;
   items: BoletaItem[];
+  /** Referencia a otro documento (ej. el caso del set de pruebas de certificación). */
+  reference?: BoletaReference;
   /**
    * Fecha y hora de generación del timbre y de la firma del documento,
    * formato AAAA-MM-DDTHH:MI:SS. Se usa el mismo valor para TSTED y
@@ -73,6 +87,8 @@ interface LineItem {
   name: string;
   quantity?: number;
   price?: number;
+  unitOfMeasure?: string;
+  exempt?: boolean;
   amount: number;
 }
 
@@ -111,6 +127,7 @@ export class Boleta {
 
     const lineItems = input.items.map((item, index) => buildLineItem(item, index + 1));
     const totalAmount = lineItems.reduce((sum, item) => sum + item.amount, 0);
+    const exemptAmount = lineItems.filter((item) => item.exempt).reduce((sum, item) => sum + item.amount, 0);
     const firstItem = lineItems[0];
     if (!firstItem) {
       throw new BoletaError("La boleta debe tener al menos un ítem en el detalle");
@@ -135,9 +152,10 @@ export class Boleta {
       buildIdDoc(caf.documentType, input.folio, input.issueDate) +
       buildEmisor(input.issuer) +
       buildReceptor(input.recipient) +
-      buildTotales(totalAmount) +
+      buildTotales(totalAmount, exemptAmount) +
       "</Encabezado>" +
       lineItems.map(buildDetalle).join("") +
+      (input.reference ? buildReferencia(input.reference) : "") +
       ted.xml +
       `<TmstFirma>${input.timestamp}</TmstFirma>` +
       "</Documento>";
@@ -162,6 +180,8 @@ function buildLineItem(item: BoletaItem, lineNumber: number): LineItem {
     amount,
     ...(item.quantity !== undefined && { quantity: item.quantity }),
     ...(item.price !== undefined && { price: item.price }),
+    ...(item.unitOfMeasure !== undefined && { unitOfMeasure: item.unitOfMeasure }),
+    ...(item.exempt !== undefined && { exempt: item.exempt }),
   };
 }
 
@@ -191,16 +211,27 @@ function buildReceptor(recipient: BoletaRecipient): string {
   return xml;
 }
 
-function buildTotales(totalAmount: number): string {
-  return `<Totales><MntTotal>${totalAmount}</MntTotal></Totales>`;
+function buildTotales(totalAmount: number, exemptAmount: number): string {
+  const mntExe = exemptAmount > 0 ? `<MntExe>${exemptAmount}</MntExe>` : "";
+  return `<Totales>${mntExe}<MntTotal>${totalAmount}</MntTotal></Totales>`;
 }
 
 function buildDetalle(item: LineItem): string {
   let xml = `<Detalle><NroLinDet>${item.lineNumber}</NroLinDet>`;
+  if (item.exempt) xml += "<IndExe>1</IndExe>";
   xml += `<NmbItem>${escapeXml(item.name)}</NmbItem>`;
   if (item.quantity !== undefined) xml += `<QtyItem>${item.quantity}</QtyItem>`;
+  if (item.unitOfMeasure !== undefined) xml += `<UnmdItem>${escapeXml(item.unitOfMeasure)}</UnmdItem>`;
   if (item.price !== undefined) xml += `<PrcItem>${item.price}</PrcItem>`;
   xml += `<MontoItem>${item.amount}</MontoItem>`;
   xml += "</Detalle>";
+  return xml;
+}
+
+function buildReferencia(reference: BoletaReference): string {
+  let xml = "<Referencia><NroLinRef>1</NroLinRef>";
+  if (reference.code !== undefined) xml += `<CodRef>${escapeXml(reference.code)}</CodRef>`;
+  if (reference.reason !== undefined) xml += `<RazonRef>${escapeXml(reference.reason)}</RazonRef>`;
+  xml += "</Referencia>";
   return xml;
 }

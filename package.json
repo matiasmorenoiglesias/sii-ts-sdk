@@ -19,7 +19,8 @@
     "build": "tsc -p tsconfig.json",
     "test": "node --import tsx --test",
     "typecheck": "tsc --noEmit",
-    "try:certificate": "node --env-file=.env --import tsx examples/try-certificate.ts"
+    "try:certificate": "node --env-file=.env --import tsx examples/try-certificate.ts",
+    "try:send": "node --env-file=.env --import tsx examples/try-send.ts"
   },
   "dependencies": {
     "@xmldom/xmldom": "^0.9.12",
