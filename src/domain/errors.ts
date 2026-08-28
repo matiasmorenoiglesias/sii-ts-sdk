@@ -39,3 +39,10 @@ export class EnvioBoletaError extends Error {
     this.name = "EnvioBoletaError";
   }
 }
+
+export class IssuerError extends Error {
+  constructor(message: string, { cause }: { cause?: unknown } = {}) {
+    super(message, { cause });
+    this.name = "IssuerError";
+  }
+}
