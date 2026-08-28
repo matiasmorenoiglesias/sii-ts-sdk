@@ -1,6 +1,6 @@
 # 🧾 sii-ts-sdk
 
-[![Release](https://img.shields.io/github/v/release/matiasmorenoiglesias/sii-ts-sdk?include_prereleases)](https://github.com/matiasmorenoiglesias/sii-ts-sdk/releases/tag/v0.1.0)
+[![Release](https://img.shields.io/github/v/release/matiasmorenoiglesias/sii-ts-sdk?include_prereleases)](https://github.com/matiasmorenoiglesias/sii-ts-sdk/releases/tag/v0.1.1)
 ![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
 ![Node](https://img.shields.io/badge/node-%3E%3D20-339933?logo=node.js&logoColor=white)
@@ -11,7 +11,7 @@ Librería TypeScript para emitir boletas electrónicas al SII de Chile.
 El objetivo es que un dev chileno pueda emitir una boleta sin tener que leer
 la documentación del SII. No es un ERP, no es un servicio: es una librería.
 
-> ⚠️ **Estado actual: [v0.1.0](https://github.com/matiasmorenoiglesias/sii-ts-sdk/releases/tag/v0.1.0)
+> ⚠️ **Estado actual: [v0.1.1](https://github.com/matiasmorenoiglesias/sii-ts-sdk/releases/tag/v0.1.1)
 > — funcional a nivel de código, en proceso de certificación real con el
 > SII.** El SDK arma, firma, autentica y envía boletas de punta a punta. El
 > set de pruebas de certificación ya fue enviado al SII y está en revisión
@@ -37,8 +37,12 @@ en [`CLAUDE.md`](./CLAUDE.md).
 
 ## Instalación
 
+Todavía no está publicado en npm — se publicará ahí cuando el SII confirme
+la certificación (ver el estado más arriba). Por ahora se instala directo
+desde GitHub, fijando la versión con un tag:
+
 ```bash
-npm install sii-ts-sdk
+npm install github:matiasmorenoiglesias/sii-ts-sdk#v0.1.1
 ```
 
 ## Uso
