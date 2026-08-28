@@ -35,7 +35,10 @@ const certificate = await Certificate.fromP12(await readFile(certPath), certPass
 const caf = await CAF.fromXML(await readFile(cafPath));
 
 const issuer = new Issuer({
-  rut: certificate.issuerRut,
+  // El RUT del emisor es el que autoriza el CAF (la empresa), no
+  // necesariamente el del certificado (puede ser el RUT personal del
+  // representante legal que firma en nombre de la empresa).
+  rut: caf.issuerRut,
   legalName: process.env.SII_ISSUER_LEGAL_NAME || undefined,
   businessActivity: process.env.SII_ISSUER_BUSINESS_ACTIVITY || undefined,
   certificate,

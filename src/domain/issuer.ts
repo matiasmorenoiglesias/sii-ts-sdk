@@ -1,6 +1,6 @@
 import type { Certificate } from "./certificate.js";
 import type { CAF } from "./caf.js";
-import { Boleta, type BoletaItem, type BoletaRecipient } from "./boleta.js";
+import { Boleta, type BoletaItem, type BoletaRecipient, type BoletaReference } from "./boleta.js";
 import { DTE } from "./dte.js";
 import { EnvioBoleta } from "./envio-boleta.js";
 import { IssuerError } from "./errors.js";
@@ -37,6 +37,8 @@ export interface CreateBoletaInput {
   folio: number;
   recipient: BoletaRecipient;
   items: BoletaItem[];
+  /** Referencia a otro documento (ej. el caso del set de pruebas de certificación). */
+  reference?: BoletaReference;
 }
 
 /**
@@ -88,6 +90,7 @@ export class Issuer {
       },
       recipient: input.recipient,
       items: input.items,
+      ...(input.reference !== undefined && { reference: input.reference }),
       timestamp: formatTimestamp(now),
     });
 
@@ -140,11 +143,15 @@ export class Issuer {
     }
 
     const now = new Date();
+    // RutEnvia es quien firma el envío (el titular del certificado),
+    // que puede ser distinto de RutEmisor (la empresa autorizada por
+    // el CAF) — ej. el representante legal firma en nombre de la SpA.
+    const senderRut = this.certificate.issuerRut;
     const envio = EnvioBoleta.sign(
       [dte],
       {
         issuerRut: this.rut,
-        senderRut: this.rut,
+        senderRut,
         resolutionDate: this.resolutionDate,
         resolutionNumber: this.resolutionNumber,
         timestamp: formatTimestamp(now),
@@ -153,7 +160,7 @@ export class Issuer {
       envelopeSigner,
     );
 
-    const result = await uploader.upload(envio.xml, this.rut, this.rut, token);
+    const result = await uploader.upload(envio.xml, senderRut, this.rut, token);
     if (result.status !== "0") {
       throw new IssuerError(`El SII rechazó el envío (estado ${result.status})`);
     }

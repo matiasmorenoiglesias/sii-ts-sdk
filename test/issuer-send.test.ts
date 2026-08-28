@@ -9,6 +9,9 @@ import type { DocumentSigner } from "../src/domain/ports/document-signer.js";
 import type { EnvioBoletaUploader, UploadResult } from "../src/domain/ports/envio-boleta-uploader.js";
 
 const certFixture = fileURLToPath(new URL("../fixtures/test-certificate.p12", import.meta.url));
+const representativeCertFixture = fileURLToPath(
+  new URL("../fixtures/test-certificate-representative.p12", import.meta.url),
+);
 const cafFixture = fileURLToPath(new URL("../fixtures/test-caf.xml", import.meta.url));
 
 async function loadFixtures() {
@@ -78,6 +81,44 @@ test("Issuer.send rechaza si el SII responde un status distinto de 0", async () 
   const uploader = new FakeUploader({ senderRut: caf.issuerRut, companyRut: caf.issuerRut, fileName: "x.xml", timestamp: "t", status: "6" });
 
   await assert.rejects(() => issuer.send(dte, "el-token", fakeSigner, uploader), IssuerError);
+});
+
+test("Issuer.send usa el RUT del certificado como RutEnvia, distinto del RUT del emisor (empresa)", async () => {
+  // Regresión: el certificado puede ser de una persona (ej. el
+  // representante legal) distinta de la empresa que autoriza el CAF.
+  // RutEnvia (quien firma el envío) debe ser el del certificado, no
+  // el de la empresa configurada en Issuer.rut.
+  const { caf } = await loadFixtures();
+  const representativeCertificate = await Certificate.fromP12(await readFile(representativeCertFixture), "test1234");
+
+  const issuer = new Issuer({
+    rut: caf.issuerRut, // la empresa, distinta del RUT del certificado
+    certificate: representativeCertificate,
+    environment: "certification",
+    resolutionDate: "2025-01-01",
+  });
+
+  const dte = await issuer.createBoleta({
+    caf,
+    folio: 1,
+    recipient: { rut: "66666666-6" },
+    items: [{ name: "Sesión kinesiología", price: 25000 }],
+  });
+
+  const uploader = new FakeUploader({
+    senderRut: representativeCertificate.issuerRut,
+    companyRut: caf.issuerRut,
+    fileName: "x.xml",
+    timestamp: "t",
+    status: "0",
+  });
+
+  await issuer.send(dte, "el-token", fakeSigner, uploader);
+
+  assert.notEqual(representativeCertificate.issuerRut, caf.issuerRut);
+  assert.equal(uploader.lastArgs?.senderRut, representativeCertificate.issuerRut);
+  assert.equal(uploader.lastArgs?.companyRut, caf.issuerRut);
+  assert.match(uploader.lastArgs?.xml ?? "", new RegExp(`<RutEnvia>${representativeCertificate.issuerRut}</RutEnvia>`));
 });
 
 test("Issuer.send exige resolutionDate configurado en el constructor", async () => {
