@@ -25,3 +25,10 @@ export class BoletaError extends Error {
     this.name = "BoletaError";
   }
 }
+
+export class DTEError extends Error {
+  constructor(message: string, { cause }: { cause?: unknown } = {}) {
+    super(message, { cause });
+    this.name = "DTEError";
+  }
+}
