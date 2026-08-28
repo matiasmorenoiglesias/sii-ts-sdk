@@ -32,3 +32,10 @@ export class DTEError extends Error {
     this.name = "DTEError";
   }
 }
+
+export class EnvioBoletaError extends Error {
+  constructor(message: string, { cause }: { cause?: unknown } = {}) {
+    super(message, { cause });
+    this.name = "EnvioBoletaError";
+  }
+}

@@ -62,6 +62,34 @@ test("DTE.sign produce una firma verificable con el certificado del emisor", asy
   assert.equal(isValid, true);
 });
 
+test("la firma del Documento sigue siendo válida embebida dentro de un ancestro con el mismo namespace", async () => {
+  // Regresión: EnvioBoleta va a envolver el DTE dentro de <EnvioBOLETA
+  // xmlns="http://www.sii.cl/SiiDte">. Con canonicalización XML
+  // inclusiva (la que usa el SII), eso puede cambiar la forma canónica
+  // de todo lo que esté adentro. Documento ya declara ese mismo
+  // namespace explícitamente (ver src/domain/xml-namespace.ts) para que
+  // la firma no cambie al quedar embebido. Esto lo prueba de verdad,
+  // no solo por razonamiento.
+  const { certificate, caf } = await loadFixtures();
+  const boleta = Boleta.create(caf, baseInput(caf));
+  const dte = DTE.sign(boleta, certificate);
+
+  const wrapped = `<EnvioBOLETA xmlns="http://www.sii.cl/SiiDte" version="1.0"><SetDTE ID="SetDoc">${dte.xml}</SetDTE></EnvioBOLETA>`;
+
+  const doc = new DOMParser().parseFromString(wrapped, "text/xml");
+  const signatureNode = xpath.select(
+    "//*[local-name(.)='Signature' and namespace-uri(.)='http://www.w3.org/2000/09/xmldsig#']",
+    doc,
+  )[0];
+  assert.ok(signatureNode, "no se encontró el nodo Signature dentro del documento embebido");
+
+  const verifier = new SignedXml({ publicCert: certificate.certificatePem });
+  verifier.loadSignature(signatureNode as Parameters<SignedXml["loadSignature"]>[0]);
+
+  const isValid = verifier.checkSignature(wrapped);
+  assert.equal(isValid, true);
+});
+
 test("DTE.sign envuelve errores del firmante en DTEError", async () => {
   const { certificate, caf } = await loadFixtures();
   const boleta = Boleta.create(caf, baseInput(caf));

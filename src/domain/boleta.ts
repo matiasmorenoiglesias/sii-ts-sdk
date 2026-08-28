@@ -2,6 +2,7 @@ import { CAF } from "./caf.js";
 import { TED } from "./ted.js";
 import { BoletaError } from "./errors.js";
 import { escapeXml } from "./xml-escape.js";
+import { SII_DTE_NAMESPACE } from "./xml-namespace.js";
 
 export { BoletaError } from "./errors.js";
 
@@ -79,12 +80,14 @@ export class Boleta {
   /** El bloque <Documento>...</Documento> completo, sin firmar todavía. */
   readonly xml: string;
   readonly id: string;
+  readonly documentType: string;
   readonly ted: TED;
   readonly totalAmount: number;
 
-  private constructor(xml: string, id: string, ted: TED, totalAmount: number) {
+  private constructor(xml: string, id: string, documentType: string, ted: TED, totalAmount: number) {
     this.xml = xml;
     this.id = id;
+    this.documentType = documentType;
     this.ted = ted;
     this.totalAmount = totalAmount;
   }
@@ -127,7 +130,7 @@ export class Boleta {
     const id = `F${input.folio}T${caf.documentType}`;
 
     const xml =
-      `<Documento ID="${id}">` +
+      `<Documento xmlns="${SII_DTE_NAMESPACE}" ID="${id}">` +
       "<Encabezado>" +
       buildIdDoc(caf.documentType, input.folio, input.issueDate) +
       buildEmisor(input.issuer) +
@@ -139,7 +142,7 @@ export class Boleta {
       `<TmstFirma>${input.timestamp}</TmstFirma>` +
       "</Documento>";
 
-    return new Boleta(xml, id, ted, totalAmount);
+    return new Boleta(xml, id, caf.documentType, ted, totalAmount);
   }
 }
 

@@ -28,7 +28,8 @@ test("Boleta.create arma el Documento con los datos básicos", async () => {
   const boleta = Boleta.create(caf, baseInput(caf));
 
   assert.equal(boleta.totalAmount, 25000);
-  assert.match(boleta.xml, /^<Documento ID="F1T39">/);
+  assert.equal(boleta.documentType, "39");
+  assert.match(boleta.xml, /^<Documento xmlns="http:\/\/www\.sii\.cl\/SiiDte" ID="F1T39">/);
   assert.match(boleta.xml, /<\/Documento>$/);
   assert.match(boleta.xml, /<TipoDTE>39<\/TipoDTE>/);
   assert.match(boleta.xml, /<Folio>1<\/Folio>/);

@@ -15,9 +15,11 @@ export { DTEError } from "./errors.js";
 export class DTE {
   /** El bloque <DTE version="1.0">...</DTE> completo, firmado. */
   readonly xml: string;
+  readonly documentType: string;
 
-  private constructor(xml: string) {
+  private constructor(xml: string, documentType: string) {
     this.xml = xml;
+    this.documentType = documentType;
   }
 
   /**
@@ -38,6 +40,6 @@ export class DTE {
     }
 
     const xml = `<DTE version="1.0">${boleta.xml}${signatureXml}</DTE>`;
-    return new DTE(xml);
+    return new DTE(xml, boleta.documentType);
   }
 }
