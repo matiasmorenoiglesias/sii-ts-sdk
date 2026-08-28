@@ -5,5 +5,5 @@ export { Boleta, BoletaError } from "./domain/boleta.js";
 export { DTE, DTEError } from "./domain/dte.js";
 export { EnvioBoleta, EnvioBoletaError } from "./domain/envio-boleta.js";
 export { Issuer, IssuerError } from "./domain/issuer.js";
-export { SiiAuthClientError } from "./domain/errors.js";
+export { SiiAuthClientError, EnvioBoletaUploaderError } from "./domain/errors.js";
 export { toISO88591, fromISO88591 } from "./encoding.js";

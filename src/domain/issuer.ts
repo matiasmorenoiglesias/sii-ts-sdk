@@ -2,11 +2,16 @@ import type { Certificate } from "./certificate.js";
 import type { CAF } from "./caf.js";
 import { Boleta, type BoletaItem, type BoletaRecipient } from "./boleta.js";
 import { DTE } from "./dte.js";
+import { EnvioBoleta } from "./envio-boleta.js";
 import { IssuerError } from "./errors.js";
 import type { SeedSigner } from "./ports/seed-signer.js";
 import type { SiiAuthClient } from "./ports/sii-auth-client.js";
+import type { DocumentSigner } from "./ports/document-signer.js";
+import type { EnvioBoletaUploader, UploadResult } from "./ports/envio-boleta-uploader.js";
 import { XmlCryptoSeedSigner } from "../adapters/xml-crypto-seed-signer.js";
 import { FetchSiiAuthClient } from "../adapters/fetch-sii-auth-client.js";
+import { XmlCryptoDocumentSigner } from "../adapters/xml-crypto-document-signer.js";
+import { FetchEnvioBoletaUploader } from "../adapters/fetch-envio-boleta-uploader.js";
 
 export { IssuerError } from "./errors.js";
 
@@ -21,6 +26,10 @@ export interface IssuerOptions {
   businessActivity?: string;
   certificate: Certificate;
   environment: Environment;
+  /** Fecha de la resolución del SII que autoriza a emitir boleta electrónica, AAAA-MM-DD. Requerida para enviar. */
+  resolutionDate?: string;
+  /** Número de la resolución. Por defecto 0, el valor fijo usado en el ambiente de certificación. */
+  resolutionNumber?: number;
 }
 
 export interface CreateBoletaInput {
@@ -41,6 +50,8 @@ export class Issuer {
   readonly businessActivity: string | undefined;
   readonly certificate: Certificate;
   readonly environment: Environment;
+  readonly resolutionDate: string | undefined;
+  readonly resolutionNumber: number;
 
   constructor(options: IssuerOptions) {
     if (options.environment !== "certification") {
@@ -54,6 +65,8 @@ export class Issuer {
     this.businessActivity = options.businessActivity;
     this.certificate = options.certificate;
     this.environment = options.environment;
+    this.resolutionDate = options.resolutionDate;
+    this.resolutionNumber = options.resolutionNumber ?? 0;
   }
 
   /**
@@ -106,6 +119,46 @@ export class Issuer {
     }
 
     return tokenResult.token;
+  }
+
+  /**
+   * Envuelve la boleta en un sobre EnvioBOLETA firmado y lo sube al
+   * ambiente de certificación. Requiere haber configurado
+   * resolutionDate en el constructor. Requiere conexión de red.
+   *
+   * @param envelopeSigner DocumentSigner port para firmar el sobre. Defaults to the xml-crypto adapter.
+   * @param uploader EnvioBoletaUploader port. Defaults to the fetch adapter.
+   */
+  async send(
+    dte: DTE,
+    token: string,
+    envelopeSigner: DocumentSigner = new XmlCryptoDocumentSigner(),
+    uploader: EnvioBoletaUploader = new FetchEnvioBoletaUploader(),
+  ): Promise<UploadResult> {
+    if (!this.resolutionDate) {
+      throw new IssuerError("Falta resolutionDate: configúralo en el constructor de Issuer para poder enviar.");
+    }
+
+    const now = new Date();
+    const envio = EnvioBoleta.sign(
+      [dte],
+      {
+        issuerRut: this.rut,
+        senderRut: this.rut,
+        resolutionDate: this.resolutionDate,
+        resolutionNumber: this.resolutionNumber,
+        timestamp: formatTimestamp(now),
+      },
+      this.certificate,
+      envelopeSigner,
+    );
+
+    const result = await uploader.upload(envio.xml, this.rut, this.rut, token);
+    if (result.status !== "0") {
+      throw new IssuerError(`El SII rechazó el envío (estado ${result.status})`);
+    }
+
+    return result;
   }
 }
 

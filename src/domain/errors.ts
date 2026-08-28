@@ -53,3 +53,10 @@ export class SiiAuthClientError extends Error {
     this.name = "SiiAuthClientError";
   }
 }
+
+export class EnvioBoletaUploaderError extends Error {
+  constructor(message: string, { cause }: { cause?: unknown } = {}) {
+    super(message, { cause });
+    this.name = "EnvioBoletaUploaderError";
+  }
+}
