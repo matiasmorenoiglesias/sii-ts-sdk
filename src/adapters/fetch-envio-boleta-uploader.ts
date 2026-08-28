@@ -57,7 +57,9 @@ interface RecepcionDteDoc {
 }
 
 function parseUploadResponse(responseXml: string): UploadResult {
-  const parser = new XMLParser();
+  // parseTagValue: false — evita que "00" se convierta en el número 0,
+  // perdiendo el cero a la izquierda (ver adapters/soap.ts).
+  const parser = new XMLParser({ parseTagValue: false });
   let doc: RecepcionDteDoc;
   try {
     doc = parser.parse(responseXml) as RecepcionDteDoc;

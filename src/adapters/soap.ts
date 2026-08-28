@@ -45,7 +45,10 @@ export function extractReturnValue(
   tag: string,
   ErrorClass: new (message: string) => Error,
 ): string {
-  const match = soapXml.match(new RegExp(`<${tag}[^>]*>([\\s\\S]*?)</${tag}>`));
+  // El SII a veces devuelve la etiqueta con prefijo de namespace (ej.
+  // <ns1:getSeedReturn>), verificado contra la respuesta real — el
+  // prefijo puede variar, así que se acepta cualquiera.
+  const match = soapXml.match(new RegExp(`<(?:\\w+:)?${tag}[^>]*>([\\s\\S]*?)</(?:\\w+:)?${tag}>`));
   if (!match?.[1]) {
     throw new ErrorClass(`La respuesta del SII no incluye <${tag}>: ${soapXml.slice(0, 300)}`);
   }
@@ -78,7 +81,11 @@ export function parseSiiResponse(
   innerXml: string,
   ErrorClass: new (message: string, options?: { cause?: unknown }) => Error,
 ): ParsedSiiResponse {
-  const parser = new XMLParser();
+  // parseTagValue: false — sin esto, fast-xml-parser convierte "00" al
+  // número 0, perdiendo el cero a la izquierda. ESTADO="00" es un código
+  // de éxito distinto de, por ejemplo, ESTADO="0"; hay que preservarlo
+  // como string exacto. Encontrado probando contra el SII real.
+  const parser = new XMLParser({ parseTagValue: false });
   let doc: SiiResponseDoc;
   try {
     doc = parser.parse(innerXml) as SiiResponseDoc;
